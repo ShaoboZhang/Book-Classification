@@ -26,29 +26,36 @@ def timeit(func):
 
 @timeit
 def train():
-    use_bert = config.use_bert
+    if config.use_bert:
+        train_dataset = BertDataset(config, config.train_file_path)
+        dev_dataset = BertDataset(config, config.dev_file_path)
+        model = Model_Bert(config).to(config.device)
+    else:
+        train_dataset = BasicDataset(config, config.train_file_path)
+        dev_dataset = BasicDataset(config, config.dev_file_path, word2idx=train_dataset.word2idx)
+        model = Model_Basic(config).to(config.device)
     # 获取训练集
-    train_dataset = BertDataset(config, config.train_file_path) if use_bert else BasicDataset(config, config.train_file_path)
     train_data = Data.DataLoader(train_dataset, config.batch_size, shuffle=True)
     # 获取验证集
-    dev_dataset = BertDataset(config, config.dev_file_path) if use_bert else BasicDataset(config, config.dev_file_path)
-    dev_data = Data.DataLoader(dev_dataset, config.batch_size//2)
-    # 建立模型
-    model = Model_Bert(config).to(config.device) if use_bert else Model_Basic(config).to(config.device)
+    dev_data = Data.DataLoader(dev_dataset, config.batch_size // 2)
     # 开始训练
     train_eval(model, train_data, dev_data, config)
 
 
 def evaluate():
-    use_bert = config.use_bert
+    if config.use_bert:
+        test_dataset = BertDataset(config, config.test_file_path)
+        model = Model_Bert(config).to(config.device)
+    else:
+        train_dataset = BasicDataset(config, config.train_file_path)
+        test_dataset = BasicDataset(config, config.test_file_path, word2idx=train_dataset.word2idx)
+        model = Model_Basic(config).to(config.device)
     # 获取测试集
-    test_dataset = BertDataset(config, config.test_file_path) if use_bert else BasicDataset(config, config.test_file_path)
     test_data = Data.DataLoader(test_dataset, config.batch_size)
-    # 建立模型
-    model = Model_Bert(config).to(config.device) if use_bert else Model_Basic(config).to(config.device)
     # 开始预测
     predict(model, test_data, config)
 
+
 if __name__ == '__main__':
     train()
-    # evaluate()
+    evaluate()
