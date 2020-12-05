@@ -59,16 +59,16 @@ class Model_Bert(nn.Module):
         logits = self.fc(outputs[1])
         loss = criterion(logits, labels)
         acc_sum = accuracy(logits, labels)
-        return loss, acc_sum.item()
+        return loss, acc_sum
 
 
 class BasicDataset(Data.Dataset):
-    def __init__(self, args, file_path, with_labels=True):
+    def __init__(self, args, file_path, with_labels=True, word2idx=None):
         self.data = preprocess(file_path, args.is_preprocess, with_labels)
         self.with_labels = with_labels
         self.max_len = args.max_len
         self.vocab_size = args.vocab_size
-        self.word2idx = self._build_vocab(self.data['text'].values)
+        self.word2idx = word2idx if word2idx else self._build_vocab(self.data['text'].values)
 
     def __getitem__(self, item):
         sent = self.data.loc[item, 'text']
@@ -93,7 +93,7 @@ class BasicDataset(Data.Dataset):
         return word2idx
 
     def _sent2idx(self, sent):
-        words = [self.word2idx.get(word, 1) for word in sent if word][:self.max_len]
+        words = [self.word2idx.get(word, 1) for word in sent if word!=' '][:self.max_len]
         words += (self.max_len - len(words)) * [0]
         return torch.tensor(words)
 
@@ -117,10 +117,10 @@ class Model_Basic(nn.Module):
         logits = self.classifier(rnn_output)
         loss = criterion(logits, labels)
         acc_sum = accuracy(logits, labels)
-        return loss, acc_sum.item()
+        return loss, acc_sum
 
 
 def accuracy(logits, targets):
     preds = torch.argmax(logits, dim=-1)
     correct = torch.sum(torch.eq(preds, targets))
-    return correct
+    return correct.item()
