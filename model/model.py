@@ -44,10 +44,12 @@ class BertDataset(Data.Dataset):
 class Model_Bert(nn.Module):
     def __init__(self, args):
         super(Model_Bert, self).__init__()
+        hidden_sz = 256
         self.bert = BertModel.from_pretrained(args.lib_path)
+        self.rnn = nn.GRU(args.hidden_size, hidden_sz, batch_first=True)
         self.fc = nn.Sequential(
             nn.Dropout(args.dropout),
-            nn.Linear(args.hidden_size, args.label_num)
+            nn.Linear(hidden_sz, args.label_num)
         )
         self.label_num = args.label_num
         self.device = args.device
@@ -56,7 +58,8 @@ class Model_Bert(nn.Module):
     def forward(self, batch_data):
         input_ids, token_type_ids, attention_mask, labels = [data.to(self.device) for data in batch_data]
         outputs = self.bert(input_ids, token_type_ids, attention_mask)
-        logits = self.fc(outputs[1])
+        outputs, _ = self.rnn(outputs[0])
+        logits = self.fc(torch.mean(outputs, dim=1))
         loss = criterion(logits, labels)
         acc_sum = accuracy(logits, labels)
         return loss, acc_sum
