@@ -33,5 +33,5 @@
 
 | 模型选择 | 是否预处理 | 准确率 |
 | :-----: | :----: | :----: |
-| Embedding+LSTM | 是 <br> 否  | 76.1% <br> 75.9% |
-| Bert-base+LSTM | 是 <br> 否  | 82.0% <br> 80.5% |
+| Embedding+LSTM | 是 <br> 否  | 76.0% <br> 75.6% |
+| Bert-base+LSTM | 是 <br> 否  | 82.2% <br> 80.4% |
